@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>旋转的地图</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="js/jquery-3.3.1.min.js" type="text/javascript"></script>
+        <script src="js/ol.js" type="text/javascript"></script>
+        <script src="js/bootstrap.min.js" type="text/javascript"></script>
+        <link href="css/ol.css" rel="stylesheet" type="text/css"/>
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+        <style>
+            .ol-scale-line {
+                left:300px;
+                bottom: 50px;
+            }
+            .ol-rotate{
+                right:40px;
+            }
+            .mouse-position-wrapper{
+                width:300px; 
+                height:29px; 
+                color:#FFFFFF; 
+                position:absolute; 
+                right:20px; 
+                bottom:20px; 
+                z-index:999;
+            }
+
+        </style>
+
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <script type="text/javascript">
+
+            var view = new ol.View({
+                center: [12950000, 4860000],
+                zoom: 7
+            });
+            var map = new ol.Map({
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    })
+                ],
+                loadTilesWhileAnimating: true,
+                view: view,
+                //添加各种控件
+                controls: ol.control.defaults().extend([
+                    new ol.control.OverviewMap({
+                        className: 'ol-overviewmap ol-custom-overviewmap',
+                        layer: [
+                            new ol.layer.Tile({
+                                source: new ol.source.OSM({
+                                    "url": "http://{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png"
+                                })
+                            })
+                        ],
+                        collapseLabel: "\u00BB", //鹰眼展开时功能按钮上的标识
+                        label: "\u00AB", //鹰眼折叠时功能按钮上的标识
+                        collapsed: false//初始为展开显示方式
+                    }),
+                    new ol.control.ScaleLine({
+                        units: "metric"
+                    }),
+                    new ol.control.Rotate({
+                        autoHide: false,
+                        render: function () {
+                            view.setRotation(view.getRotation() + Math.PI / 6)
+                        }
+                    }),
+                    new ol.control.FullScreen(),
+                    new ol.control.MousePosition({
+                        coordinateFormat: ol.coordinate.createStringXY(4),
+                        projection: 'EPSG:4326',
+                        className: 'custom-mouse-position',
+                        target: document.getElementById('mouse-position')
+                    })
+
+
+                ])
+            });
+
+            var zoomslider = new ol.control.ZoomSlider();
+            map.addControl(zoomslider);
+            var zoomToExtent = new ol.control.ZoomToExtent({
+                extent: [
+                    13100000, 4290000,
+                    13200000, 5210000
+                ]
+            });
+            map.addControl(zoomToExtent);
+
+
+        </script>  
+
+
+    </body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>绘制几何图形</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="js/jquery-3.3.1.min.js" type="text/javascript"></script>
+        <script src="js/ol.js" type="text/javascript"></script>
+        <script src="js/bootstrap.min.js" type="text/javascript"></script>
+        <link href="css/ol.css" rel="stylesheet" type="text/css"/>
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    </head>
+    <body>
+        <div id="menu">
+            <label>几何图形类型：</label>
+            <select id="type">
+                <option value="None">无</option>
+                <option value="Point">点</option>
+                <option value="LineString">线</option>
+                <option value="Polygon">多边形</option>
+                <option value="Circle">圆</option>
+                <option value="Square">正方形</option>
+                <option value="Box">长方形</option>
+            </select>
+        </div>
+        <div id="map"> </div>
+
+        <script type="text/javascript">
+            var map = new ol.Map({
+
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.XYZ({url: 'https://{a-d}.tiles.mapbox.com/v4/mapquest.streets/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwcXVlc3QiLCJhIjoiY2Q2N2RlMmNhY2NiZTRkMzlmZjJmZDk0NWU0ZGJlNTMifQ.mPRiEubbajc6a5y9ISgydg'
+                        })
+                    })
+                ],
+                view: new ol.View({
+                    center: [106.51, 29.55],
+                    projection: 'EPSG:4326',
+                    zoom: 10
+                }),
+                target: 'map'
+            });
+
+
+            var typeSelect = document.getElementById('type');
+            var draw;
+            //实例化一个矢量图层Vector作为绘制层
+
+            var source = new ol.source.Vector();
+
+            var vectorLayer = new ol.layer.Vector({
+
+                source: source,
+
+                style: new ol.style.Style({
+
+                    fill: new ol.style.Fill({//填充样式
+
+                        color: 'rgba(255, 255, 255, 0.2)'
+
+                    }),
+
+                    stroke: new ol.style.Stroke({//线样式
+
+                        color: '#ffcc33',
+
+                        width: 2
+
+                    }),
+
+                    image: new ol.style.Circle({//点样式
+
+                        radius: 7,
+
+                        fill: new ol.style.Fill({
+
+                            color: '#ffcc33'
+
+                        })
+
+                    })
+
+                })
+
+            });
+
+            //将绘制层添加到地图容器中
+
+            map.addLayer(vectorLayer);
+            typeSelect.onchange = function (e) {
+
+                map.removeInteraction(draw);        //移除绘制图形控件
+
+                addInteraction();                   //添加绘制图形控件
+
+            };
+            addInteraction();
+
+            function addInteraction() {
+
+                var typeValue = typeSelect.value;       //绘制类型
+
+                if (typeValue !== 'None') {
+
+                    var geometryFunction, maxPoints;
+
+                    if (typeValue === 'Square') {                 //正方形
+
+                        typeValue = 'Circle';               //设置绘制类型为Circle
+
+                        //设置几何信息变更函数，即创建正方形
+
+                        geometryFunction = ol.interaction.Draw.createRegularPolygon(4);
+
+                    } else if (typeValue === 'Box') {              //长方形
+
+                        typeValue = 'Circle';
+                        geometryFunction = ol.interaction.Draw.createBox();
+
+                    }
+
+
+
+                    //           console.log(typeValue);
+
+                    //实例化图形绘制控件对象并添加到地图容器中
+
+                    draw = new ol.interaction.Draw({
+
+                        source: source,
+
+                        type: typeValue, //几何图形类型
+
+                        geometryFunction: geometryFunction, //几何信息变更时的回调函数
+
+                    });
+
+                    map.addInteraction(draw);
+
+                } else {
+
+                    //清空绘制的图形
+
+                    source.clear();
+
+                }
+
+            }
+
+
+        </script>
+
+    </body>
+</html>

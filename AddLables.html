@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>在地图上进行图文标注</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="js/jquery-3.3.1.min.js" type="text/javascript"></script>
+        <script src="js/ol.js" type="text/javascript"></script>
+        <script src="js/bootstrap.min.js" type="text/javascript"></script>
+        <link href="css/ol.css" rel="stylesheet" type="text/css"/>
+        <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+        <style type="text/css">      
+            body, html, div, ul, li,img      
+            {            
+                border:none;            
+                padding:0px;            
+                margin:0px;        
+            }        
+        
+            .marker        
+            {            
+                width:20px;            
+                height:20px;            
+                border:1px solid #088;            
+                border-radius:10px;            
+                background-color:#0FF;            
+                opacity:0.5;        
+            }        
+            .address        
+            {            
+                text-decoration:none;            
+                color:#aa3300;            
+                font-size:14px;            
+                font-weight:bold;            
+                text-shadow:black 0.1em 0.1em 0.2em;        
+            }    
+        </style>
+
+    </head>
+    <body>
+        <div id="menu">        
+            <label class="checkbox">            
+                <input type="radio" name="label" value="vector" checked="checked" />            
+                Vector Label        
+            </label>        
+            <label class="checkbox">            
+                <input type="radio" name="label" value="overlay" />            
+                Overlay Label        
+            </label>    
+        </div>    
+        <div id="map"></div>    
+        <div id="label" style="display:none">        
+            <div id="marker" class="marker" title="Marker">            
+                <a class="address" id="address" target="_blank" href="http://www.openlayers.org">标注点</a>        
+            </div>    
+        </div>
+
+
+
+
+
+        <script type="text/javascript">
+
+            //北京地理坐标            
+            var beijing = ol.proj.fromLonLat([116.28, 39.54]);
+            ////武汉地理坐标            
+            var wuhan = ol.proj.fromLonLat([114.21, 30.37]);
+            ////初始化地图            
+            var map = new ol.Map({
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    })
+                ],
+                view: new ol.View({
+                    center: beijing,
+                    zoom: 6,
+                    minZoom: 2
+                })
+            });
+
+            //创建标签的样式            
+            var createLabelStyle = function (feature) {
+                //返回一个样式                
+                return new ol.style.Style({
+                    //把点的样式换成ICON图标                    
+                    image: new ol.style.Icon({
+                        //控制标注图片和文字之间的距离                        
+                        anchor: [0.5, 60],
+                        ////标注样式的起点位置                        
+                        anchorOrigin: 'top-right',
+                        ////X方向单位：分数                        
+                        anchorXUnits: 'fraction',
+                        ////Y方向单位：像素                        
+                        anchorYUnits: 'pixels',
+                        ////偏移起点位置的方向                        
+                        offsetOrigin: 'top-right',
+                        ////透明度                        
+                        opacity: 0.75,
+                        ////图片路径                        
+                        src: 'images/icon.png'
+                    }),
+                    //文本样式                    
+                    text: new ol.style.Text({
+                        //对齐方式                        
+                        textAlign: 'center',
+                        ////文本基线                        
+                        textBaseline: 'middle',
+                        ////字体样式                        
+                        font: 'normal 14px 微软雅黑',
+                        ////文本内容                        
+                        text: feature.get('name'),
+                        ////填充样式                        
+                        fill: new ol.style.Fill({
+                            color: '#aa3300'
+                        }),
+                        //笔触                        
+                        stroke: new ol.style.Stroke({
+                            color: '#ffcc33',
+                            width: 2
+                        })
+                    })
+                });
+            };
+
+            //初始化要素            
+            var iconFeature = new ol.Feature({
+                //点要素                
+                geometry: new ol.geom.Point(beijing),
+                ////名称属性                
+                name: '北京市',
+                ////人口属性                
+                population: 2115
+            });
+            //为点要素添加样式            
+            iconFeature.setStyle(createLabelStyle(iconFeature));
+            ////初始化矢量数据源            
+            var vectorSource = new ol.source.Vector({
+                //指定要素                
+                features: [iconFeature]
+            });
+            //初始化矢量图层            
+            var vectorLayer = new ol.layer.Vector({
+                //数据源                
+                source: vectorSource
+            });
+            //将矢量图层添加到map中            
+            map.addLayer(vectorLayer);
+            ////初始化覆盖层标注            
+            var marker = new ol.Overlay({
+                //位置坐标                
+                position: wuhan,
+                ////覆盖层如何与位置坐标匹配                
+                positioning: 'center-center',
+                ////覆盖层的元素                
+                element: document.getElementById('marker'),
+                ////ToDo 此处不能用JQuery方式$('#marker')获取元素                
+                ////事件传播到地图视点的时候是否应该停止                
+                stopEvent: false
+            });
+            //将覆盖层添加到map中            
+            map.addOverlay(marker);
+            ////设置覆盖层的title属性            
+            marker.getElement().title = '武汉市';
+            ////初始化文本覆盖层            
+            var text = new ol.Overlay({
+                //位置                
+                position: wuhan,
+                ////覆盖层的元素                
+                element: document.getElementById('address')
+            });
+            //将文本覆盖层添加到map中            
+            map.addOverlay(text);
+            ////设置文本覆盖层的内容为之前创建的覆盖层的title属性            
+            text.getElement().innerText = marker.getElement().title;
+
+
+            map.on('click', function (evt) {
+                //获取单选按钮的选项                
+                var type = $('input[name="label"]:checked').val();
+                ////获取位置坐标                
+                var point = evt.coordinate;
+                ////如果类型是矢量标注则添加矢量标签，否则添加覆盖标签                
+                if (type === 'vector') {
+                    addVectorLabel(point);
+                } else if (type === 'overlay') {
+                    addOverlayLabel(point);
+                }
+            });
+
+            function addVectorLabel(coordinate) {
+                //初始化一个新的点要素                
+                var newFeature = new ol.Feature({
+                    geometry: new ol.geom.Point(coordinate),
+                    name: '标注点'
+                });
+                //设置点的样式                
+                newFeature.setStyle(createLabelStyle(newFeature));
+                ////将当前要素添加到矢量数据源中                
+                vectorSource.addFeature(newFeature);
+            }
+            
+            //添加覆盖标注            
+            function addOverlayLabel(coordinate) {                
+                //创建一个div元素                
+                var elementDiv = document.createElement('div');                
+                ////设置div元素的样式类                
+                elementDiv.className = 'marker';                
+                ////设置div元素的title属性                
+                elementDiv.title = '标注点';                 
+                ////获取id为label的div标签                
+                var overlay = document.getElementById('label');                
+                ////将新创建的div标签添加到overlay中                
+                overlay.appendChild(elementDiv);                 
+                ////创建一个a标签元素                
+                var elementA = document.createElement('a');                
+                ////设置a标签的样式类                
+                elementA.className = 'address';                
+                ////设置a标签的链接地址                
+                elementA.href = '#';                
+                ////设置a标签的超链接文本                
+                setInnerText(elementA, elementDiv.title);               
+                //将a标签元素添加到div标签元素中                
+                elementDiv.appendChild(elementA);                 
+                ////新建一个覆盖层                
+                var newMarker = new ol.Overlay({                    
+                    //设置位置为当前鼠标点击的坐标                    
+                    position: coordinate,                    
+                    ////设置覆盖层与位置之间的匹配方式                    
+                    positioning: 'center-center',                    
+                    ////覆盖层元素                    
+                    element: elementDiv,                    
+                    ////事件传播到地图视点的时候是否应该停止                    
+                    stopEvent:false                
+                });                
+                //将覆盖层添加到map中                
+                map.addOverlay(newMarker);                 
+                ////新建一个文本覆盖层                
+                var newText = new ol.Overlay({                    
+                    //设置位置为当前鼠标点击的坐标                    
+                    position: coordinate,                    
+                    ////覆盖层元素                   
+                    element:elementA                
+                });                
+                //将文本覆盖层添加到map中                
+                map.addOverlay(newText);            
+            }
+            
+            //设置文本内容            
+            function setInnerText(element,text) {                
+                if (typeof element.textContent === 'string') {                    
+                    element.textContent = text;                
+                } else {                    
+                    element.innerText = text;                
+                }            
+            }
+
+
+        </script>
+
+
+    </body>
+</html>
